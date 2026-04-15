@@ -6,7 +6,7 @@ interface ILayerZeroEndpointV2 {
         uint32 _dstEid,
         bytes calldata _target,
         bytes calldata _callData
-    ) external view returns (bytes memory);
+    ) external payable;
 }
 
 contract LZReadOApp {
@@ -21,9 +21,9 @@ contract LZReadOApp {
         uint32 targetEid,
         address targetContract,
         bytes calldata callData
-    ) external view returns (bytes memory) {
+    ) external payable {
 
-        return ILayerZeroEndpointV2(endpoint).lzRead(
+        ILayerZeroEndpointV2(endpoint).lzRead{value: msg.value}(
             targetEid,
             abi.encode(targetContract),
             callData
