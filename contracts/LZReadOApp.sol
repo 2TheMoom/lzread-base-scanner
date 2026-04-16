@@ -1,32 +1,39 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
-interface ILayerZeroEndpointV2 {
-    function lzRead(
-        uint32 _dstEid,
-        bytes calldata _target,
-        bytes calldata _callData
-    ) external payable;
-}
-
 contract LZReadOApp {
 
     address public endpoint;
+    uint32 public targetEid;
+    address public targetContract;
 
-    constructor(address _endpoint) {
+    event ReadRequestSent(bytes callData);
+
+    constructor(address _endpoint, uint32 _targetEid, address _targetContract) {
         endpoint = _endpoint;
+        targetEid = _targetEid;
+        targetContract = _targetContract;
     }
 
     function readContract(
-        uint32 targetEid,
-        address targetContract,
-        bytes calldata callData
+        bytes calldata callData,
+        uint256 messagingFee,
+        bytes calldata extraOptions
     ) external payable {
 
-        ILayerZeroEndpointV2(endpoint).lzRead{value: msg.value}(
-            targetEid,
-            abi.encode(targetContract),
-            callData
+        (bool success,) = endpoint.call{value: msg.value}(
+            abi.encodeWithSignature(
+                "lzRead(uint32,address,bytes,uint256,bytes)",
+                targetEid,
+                targetContract,
+                callData,
+                messagingFee,
+                extraOptions
+            )
         );
+
+        require(success, "LZRead failed");
+
+        emit ReadRequestSent(callData);
     }
 }
